@@ -10,6 +10,12 @@ SIGHTENGINE_API_SECRET = os.environ.get("SIGHTENGINE_API_SECRET", "")
 
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
+print(f"Token set: {bool(TELEGRAM_TOKEN)}, Sightengine user set: {bool(SIGHTENGINE_API_USER)}", flush=True)
+if not TELEGRAM_TOKEN:
+    print("ERROR: TELEGRAM_TOKEN env var not set!", flush=True)
+if not SIGHTENGINE_API_USER or not SIGHTENGINE_API_SECRET:
+    print("ERROR: SIGHTENGINE_API_USER or SIGHTENGINE_API_SECRET not set!", flush=True)
+
 app = Flask(__name__)
 
 def tg(method, params=None):
@@ -23,13 +29,13 @@ def check_nsfw(file_url):
         r = requests.get("https://api.sightengine.com/1.0/check.json", params={
             "api_user": SIGHTENGINE_API_USER,
             "api_secret": SIGHTENGINE_API_SECRET,
-            "url": file_url,
+            "media": file_url,
             "models": "nudity",
         }, timeout=15)
         data = r.json()
         print(f"Sightengine response: {json.dumps(data)}", flush=True)
         n = data.get("nudity", {})
-        result = n.get("raw", 0) > 0.5 or n.get("partial", 0) > 0.7
+        result = n.get("sexual_activity", 0) > 0.5 or n.get("sexual_display", 0) > 0.5 or n.get("erotica", 0) > 0.7
         print(f"NSFW detected: {result}", flush=True)
         return result
     except Exception as e:
@@ -45,8 +51,11 @@ def webhook():
     if not update:
         return "OK"
 
-    msg = update.get("message") or update.get("edited_message")
+    print(f"Update keys: {list(update.keys())}, msg keys: {list(update.get('message', {}).keys()) if update.get('message') else 'no message'}", flush=True)
+
+    msg = update.get("message") or update.get("edited_message") or update.get("channel_post")
     if not msg:
+        print("No message/edited_message/channel_post in update", flush=True)
         return "OK"
 
     chat = msg.get("chat", {})
