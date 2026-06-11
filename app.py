@@ -23,7 +23,7 @@ def check_nsfw(file_url):
         r = requests.get("https://api.sightengine.com/1.0/check.json", params={
             "api_user": SIGHTENGINE_API_USER,
             "api_secret": SIGHTENGINE_API_SECRET,
-            "media": file_url,
+            "url": file_url,
             "models": "nudity",
         }, timeout=15)
         data = r.json()
