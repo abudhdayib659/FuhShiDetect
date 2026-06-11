@@ -29,11 +29,7 @@ def check_nsfw(file_url):
         data = r.json()
         print(f"Sightengine response: {json.dumps(data)}", flush=True)
         n = data.get("nudity", {})
-        result = (
-            n.get("sexual_activity", 0) > 0.3
-            or n.get("sexual_display", 0) > 0.3
-            or n.get("erotica", 0) > 0.5
-        )
+        result = n.get("raw", 0) > 0.5 or n.get("partial", 0) > 0.7
         print(f"NSFW detected: {result}", flush=True)
         return result
     except Exception as e:
